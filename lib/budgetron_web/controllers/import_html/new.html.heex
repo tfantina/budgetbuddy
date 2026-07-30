@@ -1,0 +1,29 @@
+<.header>
+  Import Transactions
+  <:subheader>Upload a CSV file with your transactions</:subheader>
+</.header>
+
+<div class="max-w-2xl mx-auto mt-8">
+  <.card>
+    <.card_header>
+      <.card_title>Upload CSV File</.card_title>
+    </.card_header>
+    
+    <.card_body>
+      <p class="mb-4">Upload a CSV file containing your transactions. The file should have columns for amount, date, location, and optionally memo.</p>
+      
+      <form phx-submit="create" enctype="multipart/form-data">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">CSV File</span>
+          </label>
+          <input type="file" name="csv" class="file-input file-input-bordered w-full" accept=".csv,text/csv" required />
+        </div>
+        
+        <div class="mt-6">
+          <button type="submit" class="btn btn-primary">Upload & Continue</button>
+        </div>
+      </form>
+    </.card_body>
+  </.card>
+</div>
