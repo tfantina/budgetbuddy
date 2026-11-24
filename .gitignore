@@ -39,3 +39,6 @@ npm-debug.log
 *.db
 *.db-*
 
+# Local secrets
+/config/dev.secret.exs
+

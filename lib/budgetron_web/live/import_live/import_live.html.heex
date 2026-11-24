@@ -1,51 +1,56 @@
 <.header>
   Tinder for Finances
-  <:subheader>Review and categorize your imported transactions</:subheader>
+  <:subtitle>Review and categorize your imported transactions</:subtitle>
 </.header>
 
-<div class="mt-8" phx-hook="TinderNav" phx-key="enter" phx-click="next">
+<div id="tinder-nav" class="mt-8" phx-hook="TinderNav" phx-key="enter" phx-click="next">
   <div class="card bg-base-100 shadow-xl max-w-2xl mx-auto">
     <div class="card-body">
-      <h2 class="card-title">Transaction <%= @current_index + 1 %> of <%= length(@transactions) %></h2>
-      
+      <h2 class="card-title">Transaction {@current_index + 1} of {length(@transactions)}</h2>
+
       <div class="space-y-4 mt-4">
         <div>
           <label class="label">Date</label>
-          <div class="text-lg"><%= format_date(@current_transaction.date) %></div>
+          <div class="text-lg">{format_date(@current_transaction.date)}</div>
         </div>
-        
+
         <div>
           <label class="label">Amount</label>
-          <div class="text-lg font-bold">$<%= Decimal.to_string(@current_transaction.amount, :currency) %></div>
+          <div class="text-lg font-bold">${Decimal.to_string(@current_transaction.amount)}</div>
         </div>
-        
+
         <div>
           <label class="label">Location</label>
-          <div class="text-lg"><%= @current_transaction.location.name %></div>
+          <div class="text-lg">{@current_transaction.location.name}</div>
         </div>
-        
+
         <%= if @current_transaction.memo && @current_transaction.memo != "" do %>
-        <div>
-          <label class="label">Memo</label>
-          <div class="text-lg"><%= @current_transaction.memo %></div>
-        </div>
+          <div>
+            <label class="label">Memo</label>
+            <div class="text-lg">{@current_transaction.memo}</div>
+          </div>
         <% end %>
-        
+
         <div>
           <label class="label">Category</label>
-          <select 
+          <select
             class="select select-bordered w-full"
             phx-change="set_category"
             name="category_id"
           >
             <option value="">-- Select Category --</option>
             <%= for category <- @categories do %>
-              <option value={category.id} selected={category.id == @current_transaction.category_id}><%= category.name %></option>
+              <option
+                value={category.id}
+                selected={category.id == @current_transaction.category_id}
+              >
+                {category.name}
+              </option>
             <% end %>
           </select>
         </div>
       </div>
-      
+
       <div class="card-actions justify-end mt-6">
         <button class="btn btn-ghost" phx-click="prev">Previous</button>
         <button class="btn btn-primary" phx-click="next">Next</button>
@@ -56,8 +61,8 @@
 </div>
 
 <%= if @completed do %>
-<div class="mt-8 p-4 bg-success text-success-content rounded-lg">
-  <h3 class="text-xl font-bold">All transactions reviewed!</h3>
-  <p>You've reviewed all <%= length(@transactions) %> transactions.</p>
-</div>
+  <div class="mt-8 p-4 bg-success text-success-content rounded-lg">
+    <h3 class="text-xl font-bold">All transactions reviewed!</h3>
+    <p>You've reviewed all {length(@transactions)} transactions.</p>
+  </div>
 <% end %>

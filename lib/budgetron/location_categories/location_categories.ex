@@ -61,7 +61,7 @@ defmodule Budgetron.LocationCategories do
 
   @doc """
   Determines the default category for a location based on its location-category history.
-  
+
   Logic:
   - If there are no location-categories, return nil
   - If the most recent has override=false, use it
@@ -71,15 +71,19 @@ defmodule Budgetron.LocationCategories do
   """
   def determine_default_category(location_categories) do
     case location_categories do
-      [] -> nil
+      [] ->
+        nil
+
       [first | rest] ->
         if !first.override do
           first.category
         else
           # Most recent is override, check if there's a previous non-override
-          case Enum.find(rest, & !&1.override) do
-            nil -> first.category  # All are overrides, use the most recent
-            non_override -> non_override.category  # Use the previous non-override
+          case Enum.find(rest, &(!&1.override)) do
+            # All are overrides, use the most recent
+            nil -> first.category
+            # Use the previous non-override
+            non_override -> non_override.category
           end
         end
     end

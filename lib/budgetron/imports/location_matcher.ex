@@ -8,7 +8,7 @@ defmodule Budgetron.Imports.LocationMatcher do
 
   @doc """
   Finds or creates a location for the given name.
-  
+
   Uses fuzzy matching to find existing locations that are similar.
   If no match is found, creates a new location.
   """
@@ -23,11 +23,13 @@ defmodule Budgetron.Imports.LocationMatcher do
     case find_exact_match(location_name) do
       %Location{} = location ->
         {:ok, location}
+
       nil ->
         # Try fuzzy match
         case find_fuzzy_match(location_name) do
           %Location{} = location ->
             {:ok, location}
+
           nil ->
             # Create new location
             Locations.create_location(%{name: location_name})
@@ -40,7 +42,7 @@ defmodule Budgetron.Imports.LocationMatcher do
   """
   def find_exact_match(location_name) do
     normalized = normalize(location_name)
-    
+
     Locations.list_locations()
     |> Enum.find(fn %Location{name: name} ->
       normalize(name) == normalized
@@ -49,16 +51,16 @@ defmodule Budgetron.Imports.LocationMatcher do
 
   @doc """
   Finds a fuzzy match for the location name.
-  
+
   Uses substring matching on normalized names (lowercase, no spaces or hyphens).
   """
   def find_fuzzy_match(location_name) do
     normalized_query = normalize(location_name)
-    
+
     Locations.list_locations()
     |> Enum.find(fn %Location{name: name} ->
       normalized_existing = normalize(name)
-      
+
       # Check if one contains the other
       String.contains?(normalized_query, normalized_existing) ||
         String.contains?(normalized_existing, normalized_query)
@@ -67,7 +69,7 @@ defmodule Budgetron.Imports.LocationMatcher do
 
   @doc """
   Normalizes a location name for comparison.
-  
+
   Converts to lowercase and removes spaces and hyphens.
   """
   def normalize(name) do

@@ -4,7 +4,8 @@ defmodule Budgetron.Repo.Migrations.CreateTransactions do
   def change do
     create table(:transactions) do
       add :amount, :decimal, null: false
-      add :date, :integer, null: false  # Unix timestamp
+      # Unix timestamp
+      add :date, :integer, null: false
       add :memo, :string
       add :location_id, references(:locations, on_delete: :nothing), null: false
       add :category_id, references(:categories, on_delete: :nothing)

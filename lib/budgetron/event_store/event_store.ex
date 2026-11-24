@@ -51,8 +51,25 @@ defmodule Budgetron.EventStore do
   """
   def changeset(event, attrs) do
     event
-    |> Ecto.Changeset.cast(attrs, [:event_type, :aggregate_type, :aggregate_id, :data, :timestamp, :version])
-    |> Ecto.Changeset.validate_required([:event_type, :aggregate_type, :aggregate_id, :data, :timestamp, :version])
-    |> Ecto.Changeset.unique_constraint(:aggregate_id, name: :events_aggregate_id_version_unique, message: "version already exists")
+    |> Ecto.Changeset.cast(attrs, [
+      :event_type,
+      :aggregate_type,
+      :aggregate_id,
+      :data,
+      :timestamp,
+      :version
+    ])
+    |> Ecto.Changeset.validate_required([
+      :event_type,
+      :aggregate_type,
+      :aggregate_id,
+      :data,
+      :timestamp,
+      :version
+    ])
+    |> Ecto.Changeset.unique_constraint(:aggregate_id,
+      name: :events_aggregate_id_version_unique,
+      message: "version already exists"
+    )
   end
 end
