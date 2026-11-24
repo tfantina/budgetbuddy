@@ -87,3 +87,9 @@ config :phoenix_live_view,
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+# Local secrets (gitignored) — create config/dev.secret.exs with your Plaid keys:
+#   config :budgetron, :plaid, client_id: "...", secret: "...", env: "sandbox"
+if File.exists?(Path.expand("dev.secret.exs", __DIR__)) do
+  import_config "dev.secret.exs"
+end

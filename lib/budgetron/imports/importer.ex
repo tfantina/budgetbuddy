@@ -3,7 +3,6 @@ defmodule Budgetron.Imports.Importer do
   Main module for importing transactions from CSV files.
   """
 
-  alias Budgetron.Locations
   alias Budgetron.Transactions
   alias Budgetron.Imports.CSVParser
   alias Budgetron.Imports.LocationMatcher
@@ -11,28 +10,28 @@ defmodule Budgetron.Imports.Importer do
 
   @doc """
   Imports transactions from a CSV file with the given column mapping.
-  
+
   Returns a list of created transactions.
   """
   def import(csv_content, column_mapping) do
     # Parse CSV
-    {headers, rows} = CSVParser.parse_with_headers(csv_content)
-    
+    {_headers, rows} = CSVParser.parse_with_headers(csv_content)
+
     # Map rows to transaction data
     mapped_rows = map_rows(rows, column_mapping)
-    
+
     # Process each row: find/create location, create transaction
-    transactions = 
+    transactions =
       Enum.map(mapped_rows, fn row_data ->
         # Find or create location
         {:ok, location} = LocationMatcher.find_or_create_location(row_data.location)
-        
+
         # Parse date to Unix timestamp
         timestamp = parse_date(row_data.date)
-        
+
         # Parse amount
         amount = parse_amount(row_data.amount)
-        
+
         # Create transaction
         Transactions.create_transaction(%{
           amount: amount,
@@ -43,10 +42,10 @@ defmodule Budgetron.Imports.Importer do
       end)
       |> Enum.filter(&match?({:ok, _}, &1))
       |> Enum.map(fn {:ok, t} -> t end)
-    
+
     # Auto-categorize transactions
     categorized_transactions = Categorizer.categorize_all(transactions)
-    
+
     # Update transactions with categories
     Enum.map(categorized_transactions, fn transaction ->
       if transaction.category_id do
@@ -55,13 +54,10 @@ defmodule Budgetron.Imports.Importer do
         transaction
       end
     end)
-    
+
     {:ok, categorized_transactions}
   end
 
-  @doc """
-  Maps CSV rows to transaction data based on column mapping.
-  """
   defp map_rows(rows, column_mapping) do
     Enum.map(rows, fn row ->
       %{
@@ -75,7 +71,7 @@ defmodule Budgetron.Imports.Importer do
 
   @doc """
   Parses a date string to Unix timestamp.
-  
+
   Supports various date formats:
   - YYYY-MM-DD
   - MM/DD/YYYY
@@ -95,37 +91,38 @@ defmodule Budgetron.Imports.Importer do
         # Convert Date to DateTime at start of day
         DateTime.new!(date, ~T[00:00:00])
         |> DateTime.to_unix()
+
       _ ->
-        # Try other formats
-        try do
-          # Try MM/DD/YYYY or DD-MM-YYYY
-          parts = String.split(date_string, ["/", "-"])
-          
-          case parts do
-            [year, month, day] when byte_size(year) == 4 ->
-              Date.from_iso8601("#{year}-#{month}-#{day}")
-            [month, day, year] when byte_size(year) == 4 ->
-              Date.from_iso8601("#{year}-#{month}-#{day}")
-            [day, month, year] when byte_size(year) == 4 ->
-              Date.from_iso8601("#{year}-#{month}-#{day}")
-            _ ->
-              # Try DateTime parsing
-              DateTime.from_iso8601(date_string)
-          end
-          |> case do
-            {:ok, %DateTime{} = dt} -> DateTime.to_unix(dt)
-            {:ok, %Date{} = d} -> DateTime.new!(d, ~T[00:00:00]) |> DateTime.to_unix()
-            _ -> 0  # Default to epoch if parsing fails
-          end
-        rescue
-          _ -> 0
+        parse_alternative_date(date_string)
+    end
+  end
+
+  defp parse_alternative_date(date_string) do
+    # Try other formats
+    try do
+      # Try MM/DD/YYYY or DD-MM-YYYY
+      parts = String.split(date_string, ["/", "-"])
+
+      result =
+        case parts do
+          [a, b, c] when byte_size(c) == 4 -> Date.from_iso8601("#{c}-#{a}-#{b}")
+          _ -> DateTime.from_iso8601(date_string)
         end
+
+      case result do
+        {:ok, %Date{} = d} -> DateTime.new!(d, ~T[00:00:00]) |> DateTime.to_unix()
+        {:ok, %DateTime{} = dt, _offset} -> DateTime.to_unix(dt)
+        # Default to epoch if parsing fails
+        _ -> 0
+      end
+    rescue
+      _ -> 0
     end
   end
 
   @doc """
   Parses an amount string to Decimal.
-  
+
   Handles currency symbols and commas.
   """
   def parse_amount(amount_string) when is_binary(amount_string) do

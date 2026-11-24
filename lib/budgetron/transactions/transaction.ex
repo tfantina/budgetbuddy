@@ -4,7 +4,8 @@ defmodule Budgetron.Transactions.Transaction do
 
   schema "transactions" do
     field :amount, :decimal
-    field :date, :integer  # Unix timestamp
+    # Unix timestamp
+    field :date, :integer
     field :memo, :string
     belongs_to :location, Budgetron.Locations.Location
     belongs_to :category, Budgetron.Categories.Category

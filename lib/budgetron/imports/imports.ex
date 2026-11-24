@@ -7,7 +7,7 @@ defmodule Budgetron.Imports do
 
   @doc """
   Processes a CSV import with the given column mapping.
-  
+
   column_mapping is a map like:
   %{
     "amount" => "Amount",
@@ -15,7 +15,7 @@ defmodule Budgetron.Imports do
     "location" => "Description",
     "memo" => "Memo"
   }
-  
+
   Returns {:ok, transactions} or {:error, reason}.
   """
   def process_import(csv_content, column_mapping) do

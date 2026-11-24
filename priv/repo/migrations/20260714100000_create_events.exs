@@ -12,7 +12,10 @@ defmodule Budgetron.Repo.Migrations.CreateEvents do
       timestamps()
     end
 
-    create unique_index(:events, [:aggregate_type, :aggregate_id, :version], name: :events_aggregate_id_version_unique)
+    create unique_index(:events, [:aggregate_type, :aggregate_id, :version],
+             name: :events_aggregate_id_version_unique
+           )
+
     create index(:events, [:aggregate_type, :aggregate_id])
     create index(:events, [:timestamp])
     create index(:events, [:event_type])

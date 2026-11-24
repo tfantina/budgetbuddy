@@ -58,7 +58,10 @@ defmodule Budgetron.Locations do
     pattern = "%" <> normalized_query <> "%"
 
     Location
-    |> where([l], fragment("LOWER(REPLACE(REPLACE(?, ' ', ''), '-', '')) LIKE ?", l.name, ^pattern))
+    |> where(
+      [l],
+      fragment("LOWER(REPLACE(REPLACE(?, ' ', ''), '-', '')) LIKE ?", l.name, ^pattern)
+    )
     |> Repo.all()
   end
 

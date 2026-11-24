@@ -8,19 +8,21 @@
     <.card_header>
       <.card_title>Column Mapping</.card_title>
     </.card_header>
-    
+
     <.card_body>
-      <p class="mb-4">Please select which column from your CSV file contains each piece of transaction data.</p>
-      
+      <p class="mb-4">
+        Please select which column from your CSV file contains each piece of transaction data.
+      </p>
+
       <form phx-submit="process">
-        <input type="hidden" name="_csrf_token" value={Plug.CSRFProtection.get_csrf_token()}>
-        
+        <input type="hidden" name="_csrf_token" value={Plug.CSRFProtection.get_csrf_token()} />
+
         <%= for header <- @headers do %>
           <div class="form-control mb-4">
             <label class="label">
-              <span class="label-text"><%= header %></span>
+              <span class="label-text">{header}</span>
             </label>
-            <select name="column_mapping[<%= header %>]" class="select select-bordered w-full">
+            <select name={"column_mapping[#{header}]"} class="select select-bordered w-full">
               <option value="">-- Ignore this column --</option>
               <option value="amount">Amount ($)</option>
               <option value="date">Date</option>
@@ -29,7 +31,7 @@
             </select>
           </div>
         <% end %>
-        
+
         <div class="mt-6">
           <button type="submit" class="btn btn-primary">Continue to Import</button>
         </div>
