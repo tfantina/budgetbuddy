@@ -1,0 +1,174 @@
+<Layouts.app flash={@flash}>
+  <div id="plaid-link" phx-hook=".PlaidLink" class="px-4 py-10 sm:px-6 lg:px-8">
+    <.header>
+      Bank Accounts
+      <:subtitle>Connect a bank via Plaid to view accounts, balances, and transactions</:subtitle>
+      <:actions>
+        <.button id="connect-bank-btn" phx-click="connect">Connect bank</.button>
+        <.button id="load-transactions-btn" phx-click="load_transactions" class="btn-secondary">
+          Load transactions (30 days)
+        </.button>
+      </:actions>
+    </.header>
+
+    <%= if @error do %>
+      <div class="mt-4 alert alert-error" id="plaid-error">{@error}</div>
+    <% end %>
+    <%= if @connecting do %>
+      <div class="mt-4 alert alert-info" id="plaid-connecting">Opening Plaid Link…</div>
+    <% end %>
+
+    <div class="mt-8 grid gap-6 lg:grid-cols-2">
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title">Connected items</h2>
+          <%= if @items == [] do %>
+            <p class="text-base-content/70">No bank connected yet. Click "Connect bank".</p>
+          <% else %>
+            <ul class="mt-2 space-y-2">
+              <%= for item <- @items do %>
+                <li class="flex justify-between rounded-lg bg-base-200 px-4 py-2">
+                  <span>
+                    {item.institution_name || item.institution_id || "Unknown institution"}
+                  </span>
+                  <span class="text-base-content/60 font-mono text-xs">{item.item_id}</span>
+                </li>
+              <% end %>
+            </ul>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title">Accounts &amp; balances</h2>
+          <%= if @accounts == [] do %>
+            <p class="text-base-content/70">No accounts loaded.</p>
+          <% else %>
+            <div class="overflow-x-auto">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Account</th>
+                    <th>Type</th>
+                    <th class="text-right">Available</th>
+                    <th class="text-right">Current</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <%= for account <- @accounts do %>
+                    <tr>
+                      <td>
+                        {account["name"]}
+                        <%= if account["mask"] do %>
+                          <span class="text-base-content/50 text-xs">••{account["mask"]}</span>
+                        <% end %>
+                      </td>
+                      <td class="capitalize">{account["subtype"] || account["type"]}</td>
+                      <td class="text-right">
+                        {format_money(
+                          account["balances"]["available"],
+                          account["balances"]["iso_currency_code"]
+                        )}
+                      </td>
+                      <td class="text-right">
+                        {format_money(
+                          account["balances"]["current"],
+                          account["balances"]["iso_currency_code"]
+                        )}
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl mt-6">
+      <div class="card-body">
+        <h2 class="card-title">Transactions</h2>
+        <%= if @transactions == [] do %>
+          <p class="text-base-content/70">No transactions loaded. Click "Load transactions".</p>
+        <% else %>
+          <div class="overflow-x-auto">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Name</th>
+                  <th>Category</th>
+                  <th class="text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <%= for txn <- @transactions do %>
+                  <tr>
+                    <td>{txn["date"]}</td>
+                    <td>{txn["merchant_name"] || txn["name"]}</td>
+                    <td class="text-base-content/70">
+                      {Enum.join(txn["category"] || [], " / ")}
+                    </td>
+                    <td class="text-right">
+                      {format_money(txn["amount"], txn["iso_currency_code"])}
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <script :type={Phoenix.LiveView.ColocatedHook} name=".PlaidLink">
+    export default {
+      mounted() {
+        this.handler = null
+
+        const loadPlaidLink = () => {
+          if (window.Plaid) return Promise.resolve()
+          return new Promise((resolve, reject) => {
+            const script = document.createElement("script")
+            script.src = "https://cdn.plaid.com/link/v2/stable/link-initialize.js"
+            script.onload = resolve
+            script.onerror = reject
+            document.head.appendChild(script)
+          })
+        }
+
+        this.handleEvent("plaid:link_token", async ({link_token}) => {
+          try {
+            await loadPlaidLink()
+          } catch (e) {
+            debugger;
+            console.log(e)
+            this.pushEvent("plaid_error", {message: "Could not load Plaid Link script: " + e})
+            return
+          }
+          if (this.handler) this.handler.destroy()
+          this.handler = window.Plaid.create({
+            token: link_token,
+            onSuccess: (public_token, metadata) => {
+              this.pushEvent("exchange_public_token", {
+                public_token: public_token,
+                institution_id: metadata.institution?.institution_id,
+                institution_name: metadata.institution?.name
+              })
+            },
+            onExit: (err) => {
+              if (err) this.pushEvent("plaid_error", {message: "Plaid Link exited: " + (err.error_message || err)})
+            }
+          })
+          this.handler.open()
+        })
+      },
+      destroyed() {
+        if (this.handler) this.handler.destroy()
+      }
+    }
+  </script>
+</Layouts.app>

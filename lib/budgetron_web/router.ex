@@ -18,15 +18,18 @@ defmodule BudgetronWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
-    
+
     # Import routes
     get "/imports/new", ImportController, :new
     post "/imports", ImportController, :create
     post "/imports/process", ImportController, :process
     get "/imports/review", ImportController, :review
-    
+
     # LiveView route for tinder mode
     live "/imports/review/live", ImportLive, :index
+
+    # Plaid bank connection
+    live "/plaid", PlaidLive, :index
   end
 
   # Other scopes may use custom stacks.
